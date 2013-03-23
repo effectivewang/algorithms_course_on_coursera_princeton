@@ -1,6 +1,3 @@
-//import java.util.*;
-//import java.lang.*;
-
 public class Board {
 
     private int[][] board;
@@ -126,6 +123,9 @@ public class Board {
         return blocks;
     }
 
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
     // does this board equal y?
     public boolean equals(Object y) {
          Board other = (Board) y;
@@ -133,7 +133,15 @@ public class Board {
         if (this.dimension() != other.dimension())
             return false;
                 
-        return this.toString() == other.toString();
+        
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                if(this.board[i][j] != other.board[i][j])
+                    return false;
+            }
+        }
+        
+        return true;
     }
 
     // all neighboring boards
@@ -190,7 +198,6 @@ public class Board {
             }
         }
 
-        sb.append("\n");
         return sb.toString();
     }
     
@@ -208,5 +215,20 @@ public class Board {
         
         Board board = new Board(values);
         System.out.println(board.toString());
+        
+        
+        values[0][0] = 1;
+        values[0][1] = 2;
+        values[0][2] = 3;
+        values[1][0] = 4;
+        values[1][1] = 5;
+        values[1][2] = 6;
+        values[2][0] = 7;
+        values[2][1] = 8;
+        values[2][2] = 0;
+        System.out.println(board.toString());
+        System.out.println(board.isGoal());
+        
+        System.out.println(board.twin().toString());
     }
 }

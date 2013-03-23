@@ -1,9 +1,8 @@
-import java.util.*;
-//import java.lang.*;
+//import java.util.*;
 
 public class Solver {
     private Board root;    
-    private ArrayList<Board> solution;
+    private Stack<Board> solution;
     
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -24,45 +23,78 @@ public class Solver {
         
         return -1;
     }
-
+    
     // sequence of boards in a shortest solution; null if no solution
     public Iterable<Board> solution() {
-        solution = new ArrayList<Board>();
+        solution = new Stack<Board>();
         
-        MinPQ<Board> pq = new MinPQ<Board>(4, new Comparator<Board>() {
+        MinPQ<SearchNode> pq = new MinPQ<SearchNode>();  
+        MinPQ<SearchNode> twinPQ = new MinPQ<SearchNode>();        
+        Board board = root;       
+        pq.insert(new SearchNode(board, null, 0));
+        
+        Board twinBoard = root.twin();
+        twinPQ.insert(new SearchNode(twinBoard, null, 0));
+        
+        while (!pq.isEmpty()) {
+            SearchNode minNode = pq.min();
+            SearchNode twinNode = twinPQ.min();
             
-            public int compare(Board a, Board b) {
-                if (a.hamming() != b.hamming())
-                    return a.hamming() - b.hamming();
-                else
-                    return a.manhattan() - b.manhattan();
+            pq.delMin();
+            twinPQ.delMin();
+                        
+            if(minNode.getBoard().isGoal()) {
+                SearchNode prev = minNode;
+                while(prev.previous != null) {
+                    solution.push(prev.getBoard());
+                    prev = prev.previous;
+                }                
+                return solution;
             }
-        });
-        
-        Board board = root;        
-        while (!board.isGoal()) {
-            for (Board temp : board.neighbors()) {
-                pq.insert(temp);
+            
+            if(twinNode.getBoard().isGoal()) {
+                solution = null;
+                return null;
+            }
+            
+            for (Board neighbor : minNode.getBoard().neighbors()) {
+                if (minNode.previous != null && minNode.previous.getBoard().equals(neighbor)) 
+                    continue;
                 
-                board = temp;
-                if (temp.twin().isGoal()) {
-                    solution = null;
-                    return solution;
-                }
+                pq.insert(new SearchNode(neighbor, minNode, minNode.moves() + 1));
             }
-        }
+            
+            for (Board neighbor : twinNode.getBoard().neighbors()) {
+                if (twinNode.previous != null && twinNode.previous.getBoard().equals(neighbor)) 
+                    continue;
+                
+                twinPQ.insert(new SearchNode(neighbor, twinNode, twinNode.moves() + 1));
+            }
+        }        
         
-        int i = 0;
-        for (Board b : pq) {
-            if (i == 0) {
-                solution.add(b);
-            }
-            else if (((pq.size() - 1) / i) % 2 == 0) {
-                solution.add(b);
-            }
-        }
-        
+        solution = null;
         return solution;
+    }
+    
+    class SearchNode implements Comparable<SearchNode> {
+        private SearchNode previous;  
+        private Board board;          
+        private int move;        
+        
+        public SearchNode(Board board, SearchNode previous, int move) {
+            this.previous = previous;
+            this.board = board;
+            this.move = move;
+        }
+        
+        public Board getBoard() { return board; }
+        public int moves() { return move; }        
+        
+        public int compareTo(SearchNode that) {
+            int m1 = this.board.manhattan() + this.move;
+            int m2 = that.board.manhattan() + that.move;
+            return m1 - m2;
+        }
     }
 
     // solve a slider puzzle (given below)
