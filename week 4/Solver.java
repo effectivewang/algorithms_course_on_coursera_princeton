@@ -43,32 +43,35 @@ public class Solver {
             pq.delMin();
             twinPQ.delMin();
                         
-            if(minNode.getBoard().isGoal()) {
+            if (minNode.getBoard().isGoal()) {
                 SearchNode prev = minNode;
-                while(prev.previous != null) {
+                while (prev.previous != null) {
                     solution.push(prev.getBoard());
                     prev = prev.previous;
                 }                
                 return solution;
             }
             
-            if(twinNode.getBoard().isGoal()) {
+            if (twinNode.getBoard().isGoal()) {
                 solution = null;
                 return null;
             }
             
             for (Board neighbor : minNode.getBoard().neighbors()) {
-                if (minNode.previous != null && minNode.previous.getBoard().equals(neighbor)) 
+                if (minNode.previous != null 
+                        && minNode.previous.getBoard().equals(neighbor)) 
                     continue;
                 
                 pq.insert(new SearchNode(neighbor, minNode, minNode.moves() + 1));
             }
             
             for (Board neighbor : twinNode.getBoard().neighbors()) {
-                if (twinNode.previous != null && twinNode.previous.getBoard().equals(neighbor)) 
+                if (twinNode.previous != null 
+                        && twinNode.previous.getBoard().equals(neighbor)) 
                     continue;
                 
-                twinPQ.insert(new SearchNode(neighbor, twinNode, twinNode.moves() + 1));
+                int move = twinNode.moves() + 1;
+                twinPQ.insert(new SearchNode(neighbor, twinNode, move));
             }
         }        
         
@@ -76,7 +79,7 @@ public class Solver {
         return solution;
     }
     
-    class SearchNode implements Comparable<SearchNode> {
+    private class SearchNode implements Comparable<SearchNode> {
         private SearchNode previous;  
         private Board board;          
         private int move;        

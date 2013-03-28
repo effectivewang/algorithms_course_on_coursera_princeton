@@ -13,7 +13,7 @@ public class Board {
             throw new IllegalArgumentException();
 
         N = blocks[0].length;
-        board = blocks;
+        board = copy(blocks);
         
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
@@ -36,8 +36,11 @@ public class Board {
         int count = 0;
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                // out of space
-                if (board[i][j] != i + 1) {
+                if (isBlank(board[i][j])) {
+                    continue;
+                }
+                else if (board[i][j] != ((i) * N + j) + 1) {                    
+                    // out of space
                     count++;
                 }
             }
@@ -52,10 +55,10 @@ public class Board {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 if (!isBlank(board[i][j])) {
-                    int posX = board[i][j] / N;
-                    int posY = board[i][j] % N + 1;
+                    int posX = (board[i][j] - 1) / N;
+                    int posY = (board[i][j] - 1) % N;
 
-                    dist += (posX - i) + (posY - j);
+                    dist += Math.abs((posX - i)) + Math.abs((posY - j));
                 }
             }
         }
@@ -72,15 +75,18 @@ public class Board {
 
     // is this board the goal board?
     public boolean isGoal() {
-        if (isBlank(board[N-1][N-1]) == false)
+        if (!isBlank(board[N-1][N-1]))
             return false;
         
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                if (isBlank(board[i][j]) == false) {
+                if (!isBlank(board[i][j])) {
                     if (board[i][j] != i * N + j + 1)
                         return false;
                 }
+                else if (i != N - 1 || j != N - 1) {
+                    return false;
+                }                
             }
         }
 
@@ -112,31 +118,35 @@ public class Board {
         return new Board(twin);
     }
         
-    private int[][] copy() {        
-        int[][] blocks = new int[N][N];
+    private int[][] copy() {       
+        return copy(this.board);
+    }
+    
+    private int[][] copy(int[][] blocks) {  
+        int[][] temp = new int[N][N];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                blocks[i][j] = board[i][j];
+                temp[i][j] = blocks[i][j];
             }
         }
         
-        return blocks;
+        return temp;
     }
 
-    public int hashCode() {
-        return this.toString().hashCode();
-    }
     // does this board equal y?
     public boolean equals(Object y) {
-         Board other = (Board) y;
-
-        if (this.dimension() != other.dimension())
+        assert (y != null);
+        
+        if (!(y instanceof Board))
             return false;
-                
+        
+        Board other = (Board) y;
+        if (this.dimension() != other.dimension())
+            return false;                
         
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                if(this.board[i][j] != other.board[i][j])
+                if (this.board[i][j] != other.board[i][j])
                     return false;
             }
         }
@@ -187,6 +197,8 @@ public class Board {
     // string representation of the board (in the output format specified below)
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append(N);
+        sb.append("\n");
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 sb.append(board[i][j]);
@@ -201,34 +213,19 @@ public class Board {
         return sb.toString();
     }
     
-    public static void main(String[] args) {
-        int[][] values = new int[3][3];
-        values[0][0] = 9;
-        values[0][1] = 7;
-        values[0][2] = 0;
-        values[1][0] = 2;
-        values[1][1] = 3;
-        values[1][2] = 1;
-        values[2][0] = 4;
-        values[2][1] = 5;
-        values[2][2] = 8;
+    public static void main(String[] args) {   
+        // create initial board from file
+        In in = new In(args[0]);
+        int N = in.readInt();
+        int[][] blocks = new int[N][N];
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+            blocks[i][j] = in.readInt();
+        Board initial = new Board(blocks);
         
-        Board board = new Board(values);
-        System.out.println(board.toString());
-        
-        
-        values[0][0] = 1;
-        values[0][1] = 2;
-        values[0][2] = 3;
-        values[1][0] = 4;
-        values[1][1] = 5;
-        values[1][2] = 6;
-        values[2][0] = 7;
-        values[2][1] = 8;
-        values[2][2] = 0;
-        System.out.println(board.toString());
-        System.out.println(board.isGoal());
-        
-        System.out.println(board.twin().toString());
+        System.out.println("Hamming: " + initial.hamming());
+        System.out.println("Manhattan: " + initial.manhattan());
+        System.out.println("toString:\n" + initial.toString());
+        System.out.println("Twin:\n" + initial.twin().toString());
     }
 }
